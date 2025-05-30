@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Электронный журнал</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #ffffff;
+  color: #222;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 2rem;
+  margin: 20px 0 20px 0;
+  color: #005baa;
+  letter-spacing: 1px;
+  text-align: left;
+}
+nav {
+  display: flex;
+  flex-direction: column;  
+  align-items: flex-start; 
+  padding: 20px 0 20px 0;
+  min-width: 220px;
+}
+
+nav button {
+  width: 200px;
+  color: #005baa;
+  border: none;
+  padding: 15px 25px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s, border-left 0.2s, color 0.2s;
+  border-radius: 24px 24px 24px 24px;
+}
+
+.main-flex {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+nav button:hover, nav button.active {
+  background: #e9f2fa;
+  color: #007bff;
+  border-left: 5px solid #007bff;
+}
+section {
+  width: 100%;
+  max-width: 1000px;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 25px 100px 50px 50px;
+  display: none;
+  min-height: 340px;
+}
+
+section.active {
+  display: block;
+}
+input[type="file"], input[type="text"], input[type="number"] {
+  font-size: 1rem;
+  padding: 7px 10px;
+  border-radius: 4px;
+  border: 1px solid #cfd8dc;
+  background: #f4f6f8;
+  margin-bottom: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+#uploadMessage {
+  margin-top: 12px;
+  font-weight: 500;
+  color: #005baa;
+  text-align: left;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 18px;
+  background: #fff;
+  table-layout: auto;
+}
+th, td {
+  border: 1px solid #e3e7ea;
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 1rem;
+}
+th:first-child, td:first-child {
+  text-align: center;
+  word-break: break-word;
+}
+th:nth-child(2), td:nth-child(2) {
+  max-width: 40px;               
+  text-align: center;        
+  white-space: normal;    
+  word-break: break-word;  
+}
+th {
+  background: #e9f2fa;
+  color: #005baa;
+  font-weight: 700;
+}
+#editTableContainer td:first-child {
+  min-width: 290px;
+  max-width: 500px;
+  text-align: left;
+}
+
+.export-buttons {
+  text-align: left;
+  margin-bottom: 20px;
+}
+.export-buttons button {
+  background: #005baa;
+  border: none;
+  color: #fff;
+  padding: 8px 18px;
+  margin: 0 8px 8px 0;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: none;
+  transition: background 0.2s, color 0.2s;
+}
+.export-buttons button:hover {
+  background: #007bff;
+  color: #fff;
+}
+button.add-user {
+  background: #007bff;
+  color: #fff;
+  margin: 0 0 14px 0;
+  padding: 7px 16px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+button.add-user:hover {
+  background: #005baa;
+}
+button.delete-user {
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.98rem;
+  transition: background 0.2s;
+}
+button.delete-user:hover {
+  background: #b71c1c;
+}
+.grade-stats {
+  margin-top: 8px;
+  font-size: 0.97rem;
+  color: #005baa;
+  background: #e9f2fa;
+  padding: 8px 12px;
+  border-radius: 4px;
+  box-shadow: none;
+}
+.grade-stats strong {
+  color: #e53935;
+}
+#aboutSection {
+  text-align: left;
+  color: #005baa;
+  background: #ffffff;
+  box-shadow: none;
+  padding: 20px 36px;
+}
+#aboutSection h2 {
+  color: #005baa;
+  margin-bottom: 14px;
+  font-size: 1.7rem;
+  font-weight: 600;
+  text-shadow: none;
+}
+#aboutSection p {
+  font-size: 1.05rem;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+</style>
+</head>
+<body>
+
+
+
+<div class="main-flex">
+  <nav>
+    <h1>Электронный<br>журнал</h1>
+    
+    <button data-section="uploadSection">Загрузка журнала</button>
+    <button data-section="viewSection">Просмотр</button>
+    <button data-section="editSection">Редактирование</button>
+    <button data-section="statsSection">Статистика</button>
+    <button data-section="aboutSection">О программе</button>
+  </nav>
+  <div class="content-flex">
+    <section id="uploadSection" class="active"><h2>Загрузите файл в формате XLSX, CSV или TXT</h2>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt" />
+      <p id="uploadMessage"></p>
+      <button id="clearJournalBtn" style="background:#e53935;color:#fff;margin-top:20px;">Очистить журнал</button>
+    </section>
+
+    <section id="viewSection">
+      <h2>Просмотр</h2>
+      <div id="viewTableContainer"></div>
+    </section>
+
+    <section id="editSection">
+        <h2>Редактирование</h2>
+        <button class="add-user" id="addUserBtn">Добавить ученика</button>
+        <div class="export-buttons">
+        <button id="exportCSVBtn">Экспорт в CSV</button>
+        <button id="exportXLSXBtn">Экспорт в XLSX</button>
+        <button id="exportTXTBtn">Экспорт в TXT</button>
+      </div>
+      <div id="editTableContainer"></div></section>
+      <section id="statsSection">
+        <h2>Статистика</h2>
+        <div id="chartContainer"></div>
+        <div id="tableContainer"></div>
+        <div id="statsGradeStats" class="grade-stats"></div>
+        <p id="noData" style="display:none; color:#555; margin-top:20px;">Нет данных. Загрузите журнал в разделе "Загрузка журнала".</p>
+      </section>
+      <section id="aboutSection">
+        <h2>О программе</h2>
+        <p>Электронный журнал - сервис, позволяющий участникам образовательного процесса получать информацию об учебных расписаниях, текущих и итоговых отметках и домашних заданиях в режиме онлайн.</p>
+        <p>Загрузите журнал (XLSX, CSV или TXT) и просматривайте, редактируйте и отслеживайте статистику об учениках</p>
+        <p>По всем вопросам обращаться на почту:</p>
+        <p>vkadkydru@gmail.com</p>
+        <div style="text-align:center; margin-top:40px;">
+        <img src="https://img-webcalypt.ru/uploads/admin/images/meme-templates/pUCHsP6j6xQqJBP8QIeAER4eHTumg2WF.jpeg" alt="Фото автора" style="width:120px; height:120px; border-radius:50%; object-fit:cover; box-shadow:0 0 10px rgba(0,0,0,0.3);">
+        <p style="margin-top:10px; font-weight:bold; color:#007bff;">Автор: Кудрявцев Владислав Александрович</p>
+        </div>
+      </section>
+
+     
+
+  </div>
+</div>
+
+
+<script>
+  const buttons = document.querySelectorAll('nav button');
+  const sections = document.querySelectorAll('section');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-section');
+      sections.forEach(s => s.classList.remove('active'));
+      document.getElementById(target).classList.add('active');
+      if(target === 'statsSection') {
+        renderStatisticsGraphs();
+      }
+    });
+  });
+
+  let gradeBook = [];
+  let subjectsList = [];
+
+
+  document.getElementById('clearJournalBtn').addEventListener('click', () => {
+  if (!confirm('Вы действительно хотите полностью очистить журнал?')) return;
+  localStorage.removeItem('gradeBook');
+  gradeBook = [];
+  subjectsList = [];
+  renderAll();
+  document.getElementById('uploadMessage').textContent = 'Журнал очищен. Загрузите новый файл.';
+  document.getElementById('fileInput').value = '';
+  sections.forEach(s => s.classList.remove('active'));
+  document.getElementById('uploadSection').classList.add('active');
+});
+
+  document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if(ext === 'xlsx' || ext === 'xls') {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        let jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ''});
+        jsonData = jsonData.filter(row => row['ФИО'] && row['Класс']);
+        if (jsonData.length === 0) {
+          alert('Ошибка, файл не загружен.');
+          return;
+        }
+        localStorage.setItem('gradeBook', JSON.stringify(jsonData));
+        document.getElementById('uploadMessage').textContent = 'Загружено!';
+        loadData();
+        renderAll();
+        sections.forEach(s => s.classList.remove('active'));
+        document.getElementById('viewSection').classList.add('active');
+      };
+      reader.readAsArrayBuffer(file);
+    } else if(ext === 'csv' || ext === 'txt') {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const text = e.target.result;
+        let parsed = parseCSVorTXT(text);
+        parsed = parsed.filter(row => row['ФИО'] && row['Класс']);
+        if(parsed.length === 0) {
+          alert('Ошибка, файл не загружен');
+          return;
+        }
+        localStorage.setItem('gradeBook', JSON.stringify(parsed));
+        document.getElementById('uploadMessage').textContent = ext.toUpperCase() + ' Загружено!';
+        loadData();
+        renderAll();
+        sections.forEach(s => s.classList.remove('active'));
+        document.getElementById('viewSection').classList.add('active');
+      };
+      reader.readAsText(file, 'UTF-8');
+    } else {
+      alert('Неподдерживаемый тип файла (допустимый тип файла: XLSX, CSV, TXT)');
+    }
+  });
+
+  function parseCSVorTXT(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if(lines.length < 2) return [];
+    const delimiter = lines[0].includes('\t') ? '\t' : ',';
+    const headers = lines[0].split(delimiter).map(h => h.trim());
+    const data = [];
+    for(let i=1; i<lines.length; i++) {
+      const values = lines[i].split(delimiter);
+      if(values.length !== headers.length) continue;
+      const obj = {};
+      headers.forEach((h, idx) => {
+        obj[h] = values[idx] !== undefined ? values[idx].trim() : '';
+      });
+      data.push(obj);
+    }
+    return data;
+  }
+
+  function loadData() {
+    const raw = localStorage.getItem('gradeBook');
+    if (!raw) {
+      gradeBook = [];
+      subjectsList = [];
+      return false;
+    }
+    try {
+      gradeBook = JSON.parse(raw);
+      if (!Array.isArray(gradeBook) || gradeBook.length === 0) {
+        gradeBook = [];
+        subjectsList = [];
+        return false;
+      }
+      subjectsList = Object.keys(gradeBook[0]).filter(k => k !== 'ФИО' && k !== 'Класс');
+      return true;
+    } catch {
+      gradeBook = [];
+      subjectsList = [];
+      return false;
+    }
+  }
+
+  function renderAll() {
+    renderViewTable();
+    renderEditTable();
+    renderStatisticsGraphs();
+  }
+
+  function renderViewTable() {
+    const container = document.getElementById('viewTableContainer');
+    if (gradeBook.length === 0) {
+      container.innerHTML = '<p id="noData">Загрузите журнал.</p>';
+      return;
+    }
+    let html = '<table><thead><tr><th>ФИО</th><th>Класс</th>';
+    subjectsList.forEach(subj => html += `<th>${subj}</th>`);
+    html += '</tr></thead><tbody>';
+    gradeBook.forEach(row => {
+      html += `<tr><td>${row['ФИО'] || ''}</td><td>${row['Класс'] || ''}</td>`;
+      subjectsList.forEach(subj => {
+        html += `<td>${row[subj] !== undefined ? row[subj] : ''}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function renderEditTable() {
+    const container = document.getElementById('editTableContainer');
+    if (gradeBook.length === 0) {
+      container.innerHTML = '<p id="noData">Загрузите журнал.</p>';
+      return;
+    }
+    let html = '<table><thead><tr><th>ФИО</th><th>Класс</th>';
+    subjectsList.forEach(subj => html += `<th>${subj}</th>`);
+    html += '<th>Удалить</th></tr></thead><tbody>';
+    gradeBook.forEach((row, i) => {
+      html += `<tr>
+        <td><input type="text" value="${row['ФИО'] || ''}" data-row="${i}" data-field="ФИО"></td>
+        <td><input type="text" value="${row['Класс'] || ''}" data-row="${i}" data-field="Класс"></td>`;
+      subjectsList.forEach(subj => {
+        html += `<td><input type="number" min="1" max="5" value="${row[subj] || ''}" data-row="${i}" data-field="${subj}"></td>`;
+      });
+      html += `<td><button class="delete-user" data-row="${i}">X</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+      input.addEventListener('change', handleCellEdit);
+    });
+    container.querySelectorAll('.delete-user').forEach(btn => {
+      btn.addEventListener('click', handleDeleteUser);
+    });
+    document.getElementById('editGradeStats').innerHTML = '';
+  }
+
+  function handleCellEdit(e) {
+    const row = +e.target.getAttribute('data-row');
+    const field = e.target.getAttribute('data-field');
+    let value = e.target.value;
+
+    if (subjectsList.includes(field)) {
+      value = value.replace(',', '.');
+      let num = parseFloat(value);
+      if (isNaN(num) || num < 1 || num > 5) {
+        alert('Допустимые значения: 2 до 5');
+        e.target.value = gradeBook[row][field] || '';
+        return;
+      }
+      gradeBook[row][field] = num;
+    } else {
+      gradeBook[row][field] = value;
+    }
+    localStorage.setItem('gradeBook', JSON.stringify(gradeBook));
+    renderViewTable();
+    renderStatisticsGraphs();
+  }
+
+  function handleDeleteUser(e) {
+    const row = +e.target.getAttribute('data-row');
+    if (!confirm(`Удалить ученика "${gradeBook[row]['ФИО']}"?`)) return;
+    gradeBook.splice(row, 1);
+    localStorage.setItem('gradeBook', JSON.stringify(gradeBook));
+    renderEditTable();
+    renderViewTable();
+    renderStatisticsGraphs();
+  }
+
+  document.getElementById('addUserBtn').addEventListener('click', () => {
+    const newUser = { 'ФИО': '', 'Класс': '' };
+    subjectsList.forEach(subj => newUser[subj] = '');
+    gradeBook.push(newUser);
+    localStorage.setItem('gradeBook', JSON.stringify(gradeBook));
+    renderEditTable();
+    renderViewTable();
+  });
+
+  document.getElementById('exportCSVBtn').addEventListener('click', () => {
+    if (gradeBook.length === 0) {
+      alert('Нет данных для экспорта.');
+      return;
+    }
+    let csv = 'ФИО,Класс,' + subjectsList.join(',') + '\n';
+    gradeBook.forEach(row => {
+      let line = `"${row['ФИО']}","${row['Класс']}"`;
+      subjectsList.forEach(subj => {
+        line += `,${row[subj]}`;
+      });
+      csv += line + '\n';
+    });
+    downloadFile(csv, 'journal.csv', 'text/csv;charset=utf-8');
+  });
+
+  document.getElementById('exportXLSXBtn').addEventListener('click', () => {
+    if (gradeBook.length === 0) {
+      alert('Нет данных для экспорта.');
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(gradeBook);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Журнал");
+    XLSX.writeFile(wb, 'journal.xlsx');
+  });
+
+  document.getElementById('exportTXTBtn').addEventListener('click', () => {
+    if (gradeBook.length === 0) {
+      alert('Нет данных для экспорта.');
+      return;
+    }
+    let lines = [];
+    const headers = ['ФИО', 'Класс', ...subjectsList];
+    lines.push(headers.join('\t'));
+    gradeBook.forEach(row => {
+      const line = headers.map(h => row[h] || '').join('\t');
+      lines.push(line);
+    });
+    const txt = lines.join('\n');
+    downloadFile(txt, 'journal.txt', 'text/plain;charset=utf-8');
+  });
+
+  function downloadFile(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadFile(content, filename, mimeType) {
+    if (mimeType && mimeType.startsWith('text/csv')) {
+      content = '\uFEFF' + content;
+    }
+    const blob = new Blob([content], {type: mimeType});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  function median(arr) {
+    if (arr.length === 0) return 0;
+    const sorted = arr.slice().sort((a,b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    if (sorted.length % 2 === 0) {
+      return (sorted[mid - 1] + sorted[mid]) / 2;
+    } else {
+      return sorted[mid];
+    }
+  }
+
+  function renderStatisticsGraphs() {
+    const chartContainer = document.getElementById('chartContainer');
+    const tableContainer = document.getElementById('tableContainer');
+    const statsGradeStats = document.getElementById('statsGradeStats');
+    chartContainer.innerHTML = '';
+    tableContainer.innerHTML = '';
+    statsGradeStats.innerHTML = '';
+
+    if (!loadData() || gradeBook.length === 0) {
+      chartContainer.style.display = 'none';
+      tableContainer.style.display = 'none';
+      statsGradeStats.style.display = 'none';
+      document.getElementById('noData').style.display = 'block';
+      return;
+    }
+
+    chartContainer.style.display = 'block';
+    tableContainer.style.display = 'block';
+    statsGradeStats.style.display = 'block';
+    document.getElementById('noData').style.display = 'none';
+
+    const classes = Array.from(new Set(gradeBook.map(r => r['Класс']))).sort((a,b) => {
+      const parseClass = c => {
+        const m = c.match(/^(\d+)([А-Яа-яA-Za-z]*)$/);
+        if (!m) return [1000, c];
+        return [parseInt(m[1],10), m[2].toUpperCase()];
+      };
+      const [numA, letA] = parseClass(a);
+      const [numB, letB] = parseClass(b);
+      if (numA !== numB) return numA - numB;
+      return letA.localeCompare(letB);
+    });
+
+    subjectsList.forEach(subj => {
+      const canvas = document.createElement('canvas');
+      canvas.style.marginBottom = '30px';
+      chartContainer.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      const data = classes.map(cls => {
+        const studentsInClass = gradeBook.filter(r => r['Класс'] === cls);
+        const vals = studentsInClass.map(r => parseFloat(r[subj])).filter(v => !isNaN(v));
+        if (vals.length === 0) return 0;
+        const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+        return +avg.toFixed(2);
+      });
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: classes,
+          datasets: [{
+            label: `Средний балл по предмету: ${subj}`,
+            data: data,
+            backgroundColor: '#005baa'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            title: {
+              display: true,
+              text: `Средний балл по "${subj}"`
+            },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 5,
+              title: { display: true, text: 'Средний балл' }
+            },
+            x: {
+              title: { display: true, text: 'Классы' }
+            }
+          }
+        }
+      });
+
+      let html = `<caption style="caption-side: top; font-weight: bold; margin-bottom: 8px;">
+                    Предмет: ${subj}
+                  </caption>`;
+      html += '<thead><tr><th>Класс</th><th>Средний балл</th><th>Медиана</th></tr></thead><tbody>';
+      classes.forEach(cls => {
+        const studentsInClass = gradeBook.filter(r => r['Класс'] === cls);
+        const vals = studentsInClass.map(r => parseFloat(r[subj])).filter(v => !isNaN(v));
+        const avg = vals.length ? (vals.reduce((a,b) => a+b, 0) / vals.length).toFixed(2) : '0';
+        const med = vals.length ? median(vals).toFixed(2) : '0';
+        html += `<tr><td>${cls}</td><td>${avg}</td><td>${med}</td></tr>`;
+      });
+      html += '</tbody>';
+
+      const table = document.createElement('table');
+      table.style.marginBottom = '40px';
+      table.innerHTML = html;
+
+      const allVals = gradeBook.map(r => parseFloat(r[subj])).filter(v => !isNaN(v));
+      const totalAvg = allVals.length ? (allVals.reduce((a,b) => a+b, 0) / allVals.length).toFixed(2) : '0';
+      const totalMed = allVals.length ? median(allVals).toFixed(2) : '0';
+
+      const tfoot = document.createElement('tfoot');
+      const summaryRow = document.createElement('tr');
+      summaryRow.style.fontWeight = 'bold';
+      summaryRow.innerHTML = `<td>Итого</td><td>${totalAvg}</td><td>${totalMed}</td>`;
+      tfoot.appendChild(summaryRow);
+      table.appendChild(tfoot);
+
+      tableContainer.appendChild(table);
+    });
+
+    
+    const counts = {2:0,3:0,4:0,5:0};
+    let totalGrades = 0;
+    gradeBook.forEach(row => {
+      subjectsList.forEach(subj => {
+        const val = parseFloat(row[subj]);
+        if (!isNaN(val) && val >=2 && val <=5) {
+          counts[val]++;
+          totalGrades++;
+        }
+      });
+    });
+
+    if (totalGrades === 0) {
+      statsGradeStats.innerHTML = '<em>Оценок нет.</em>';
+    } else {
+      let html = '<strong>Статистика оценок (кол-во и %):</strong><br>';
+      for(let grade=2; grade<=5; grade++) {
+        const count = counts[grade];
+        const percent = ((count / totalGrades) * 100).toFixed(1);
+        html += `Оценка <strong>${grade}</strong>: ${count} учеников (${percent}%)<br>`;
+      }
+      statsGradeStats.innerHTML = html;
+    }
+  }
+
+  window.onload = () => {
+    if(loadData()) {
+      renderAll();
+    }
+  };
+</script>
+
+</body>
+</html>
